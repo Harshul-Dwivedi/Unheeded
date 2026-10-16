@@ -1,0 +1,38 @@
+# secrets
+.env
+
+# planning archive (duplicate of data/ and early specs; kept on disk, not in git)
+/handoff/
+
+# local notes, not the public repo
+docs/PROGRESS.md
+docs/LEARNINGS.md
+docs/COMMITS.md
+docs/FALKORDB-ISSUES.md
+docs/demo-storyboard.md
+docs/architecture.md
+docs/graph-schema.md
+docs/data.md
+docs/algorithms.md
+docs/evals.md
+docs/tracks.md
+docs/screens.md
+docs/design-system.md
+docs/design/
+
+# large CAROL exports; add in a later commit
+data/raw/
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Python (backend/.gitignore covers .venv, .cache, eval reports)
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# web (web/.gitignore covers node_modules, .next)
+*.tsbuildinfo

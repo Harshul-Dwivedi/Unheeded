@@ -1,0 +1,41 @@
+services:
+  falkordb:
+    image: falkordb/falkordb:v4.20.7
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"   # graph (Redis protocol); localhost only: the default user is the passwordless admin
+      - "127.0.0.1:3000:3000"   # FalkorDB browser
+    environment:
+      # agent_ro: the user agents and our MCP server use. FalkorDB itself refuses writes for it
+      # (GRAPH.QUERY / GRAPH.DELETE -> NOPERM), so read-only does not depend on any tool behaving.
+      # mcp_ro: the sponsor MCP server. Same commands as agent_ro but key pattern ~ntsb, so whoever holds the :8080 token
+      # can read the library graph and nothing else (no workspace graph: Briefs, Steps, Candidates).
+      # ws_writer: agent memory. Key pattern ~ws_* -> may read/write/delete workspace graphs only; `ntsb` -> NOPERM.
+      REDIS_ARGS: >-
+        --user agent_ro on >${AGENT_RO_PASSWORD:?set in .env} ~* resetchannels -@all
+        +GRAPH.RO_QUERY +GRAPH.LIST +GRAPH.EXPLAIN +PING +INFO +CLIENT|SETINFO +CLIENT|SETNAME +HELLO
+        --user mcp_ro on >${MCP_RO_PASSWORD:?set in .env} ~ntsb resetchannels -@all
+        +GRAPH.RO_QUERY +GRAPH.LIST +GRAPH.EXPLAIN +PING +INFO +CLIENT|SETINFO +CLIENT|SETNAME +HELLO
+        --user ws_writer on >${WS_WRITER_PASSWORD:?set in .env} ~ws_* resetchannels -@all
+        +GRAPH.QUERY +GRAPH.RO_QUERY +GRAPH.DELETE +GRAPH.LIST +GRAPH.EXPLAIN +PING +INFO +CLIENT|SETINFO +CLIENT|SETNAME +HELLO
+    volumes:
+      - falkordb-data:/var/lib/falkordb/data
+
+  falkordb-mcp:
+    image: falkordb/mcpserver:1.3.0   # sponsor's MCP server, for ad-hoc read-only questions
+    depends_on: [falkordb]
+    restart: unless-stopped           # it exits when FalkorDB restarts under it
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      MCP_TRANSPORT: http
+      MCP_PORT: "8080"
+      MCP_API_KEY: ${MCP_API_KEY:?set in .env}
+      FALKORDB_HOST: falkordb
+      FALKORDB_PORT: "6379"
+      FALKORDB_USERNAME: mcp_ro
+      FALKORDB_PASSWORD: ${MCP_RO_PASSWORD}
+      FALKORDB_DEFAULT_READONLY: "true"
+
+volumes:
+  falkordb-data:
