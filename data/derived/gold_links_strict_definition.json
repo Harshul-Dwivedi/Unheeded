@@ -1,0 +1,507 @@
+{
+ "definition": "Compute gold 'linked warning' pairs from the CAROL exports under the strict definition.\n\nDefinition (use everywhere):\n  A recommendation is a LINKED WARNING for a crash when all three hold:\n    1. The NTSB repeated (Recommendation Reiteration) or reclassified (Report Reclassification)\n       it in that crash's own report. A 'Recommendation Mention' alone does NOT count.\n    2. It was issued before the crash. Issue date = the earliest of the origin investigation's\n       BoardMeetingDate/ReportDate, the earliest correspondence date or DateClosed and 31 Dec of the ID year,\n       ignoring dates before 1 Jan of the ID year.\n    3. It was still open on the crash date (DateClosed null or after the crash).\nRun: python gold_links.py <recs.json> <investigations_with_recs.json> <pool.json> > gold_links.json",
+ "crashes": 16,
+ "links": 54,
+ "items": [
+  {
+   "ntsb_num": "DCA04MA011",
+   "event_date": "2003-12-18",
+   "city": "Memphis",
+   "fatal": 0,
+   "report": "AAR0501",
+   "lat": 35.030025,
+   "lon": -90.00962,
+   "warnings": {
+    "A-03-016": {
+     "issued": "2003-08-11",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2005-05-17"
+    }
+   }
+  },
+  {
+   "ntsb_num": "MIA08MA203",
+   "event_date": "2008-09-28",
+   "city": "District Heights",
+   "fatal": 4,
+   "report": "AAR0907",
+   "lat": 38.870834,
+   "lon": -76.876663,
+   "warnings": {
+    "A-06-013": {
+     "issued": "2006-05-30",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2009-11-13"
+    }
+   }
+  },
+  {
+   "ntsb_num": "DCA15FA085",
+   "event_date": "2015-03-05",
+   "city": "New York",
+   "fatal": 0,
+   "report": "AAR1602",
+   "lat": 40.778331,
+   "lon": -73.86972,
+   "warnings": {
+    "A-09-027": {
+     "issued": "2009-08-11",
+     "issued_from": "letter",
+     "via": "Report Reclassification",
+     "letter_date": "2016-10-06"
+    }
+   }
+  },
+  {
+   "ntsb_num": "CEN15MA290",
+   "event_date": "2015-07-03",
+   "city": "Frisco",
+   "fatal": 1,
+   "report": "AAR1701",
+   "lat": 39.568611,
+   "lon": -106.079444,
+   "warnings": {
+    "A-13-013": {
+     "issued": "2013-07-23",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2017-05-09"
+    },
+    "A-13-012": {
+     "issued": "2013-07-23",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2017-04-13"
+    }
+   }
+  },
+  {
+   "ntsb_num": "ANC17MA001",
+   "event_date": "2016-10-02",
+   "city": "Togiak",
+   "fatal": 3,
+   "report": "AAR1802",
+   "lat": 59.165554,
+   "lon": -160.653335,
+   "warnings": {
+    "A-13-013": {
+     "issued": "2013-07-23",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2018-04-26"
+    },
+    "A-13-012": {
+     "issued": "2013-07-23",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2018-04-26"
+    }
+   }
+  },
+  {
+   "ntsb_num": "DCA17FA021",
+   "event_date": "2016-10-28",
+   "city": "Chicago",
+   "fatal": 0,
+   "report": "AAR1801",
+   "lat": 41.968887,
+   "lon": -87.917778,
+   "warnings": {
+    "A-09-027": {
+     "issued": "2009-08-11",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2018-02-06"
+    }
+   }
+  },
+  {
+   "ntsb_num": "CEN17MA183",
+   "event_date": "2017-05-15",
+   "city": "Teterboro",
+   "fatal": 2,
+   "report": "AAR1902",
+   "lat": 40.829444,
+   "lon": -74.060279,
+   "warnings": {
+    "A-16-034": {
+     "issued": "2016-10-24",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2019-03-28"
+    },
+    "A-16-041": {
+     "issued": "2016-10-24",
+     "issued_from": "report",
+     "via": "Report Reclassification",
+     "letter_date": "2019-03-28"
+    },
+    "A-16-035": {
+     "issued": "2016-10-24",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2019-03-28"
+    },
+    "A-16-036": {
+     "issued": "2016-10-24",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2019-03-28"
+    },
+    "A-10-013": {
+     "issued": "2010-03-28",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2019-03-28"
+    },
+    "A-10-014": {
+     "issued": "2010-03-28",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2019-03-28"
+    }
+   }
+  },
+  {
+   "ntsb_num": "CEN19FA072",
+   "event_date": "2019-01-29",
+   "city": "Zaleski",
+   "fatal": 3,
+   "report": "AAR2001",
+   "lat": 39.323333,
+   "lon": -82.309448,
+   "warnings": {
+    "A-16-035": {
+     "issued": "2016-10-24",
+     "issued_from": "report",
+     "via": "Report Reclassification",
+     "letter_date": "2020-06-08"
+    },
+    "A-16-036": {
+     "issued": "2016-10-24",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2020-06-08"
+    },
+    "A-13-013": {
+     "issued": "2013-07-23",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2020-06-08"
+    },
+    "A-13-012": {
+     "issued": "2013-07-23",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2020-06-08"
+    }
+   }
+  },
+  {
+   "ntsb_num": "DCA19MA086",
+   "event_date": "2019-02-23",
+   "city": "Trinity Bay",
+   "fatal": 3,
+   "report": "AAR2002",
+   "lat": 29.77,
+   "lon": -94.660003,
+   "warnings": {
+    "A-10-019": {
+     "issued": "2010-03-28",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2020-08-05"
+    },
+    "A-10-017": {
+     "issued": "2010-03-28",
+     "issued_from": "report",
+     "via": "Report Reclassification",
+     "letter_date": "2020-08-05"
+    },
+    "A-10-020": {
+     "issued": "2010-03-28",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2020-08-05"
+    },
+    "A-05-001": {
+     "issued": "2005-09-09",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2020-08-05"
+    },
+    "A-15-008": {
+     "issued": "2015-04-22",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2020-08-05"
+    },
+    "A-15-007": {
+     "issued": "2015-04-22",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2020-08-05"
+    }
+   }
+  },
+  {
+   "ntsb_num": "CEN19MA141",
+   "event_date": "2019-05-13",
+   "city": "Ketchikan",
+   "fatal": 6,
+   "report": "AAR2104",
+   "lat": 55.425556,
+   "lon": -131.505,
+   "warnings": {
+    "A-16-036": {
+     "issued": "2016-10-24",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2021-05-21"
+    }
+   }
+  },
+  {
+   "ntsb_num": "ANC20MA010",
+   "event_date": "2019-12-27",
+   "city": "Kekaha",
+   "fatal": 7,
+   "report": "AIR2205",
+   "lat": 22.161666,
+   "lon": -159.62638,
+   "warnings": {
+    "A-16-034": {
+     "issued": "2016-10-24",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2022-05-26"
+    },
+    "A-16-035": {
+     "issued": "2016-10-24",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2022-05-26"
+    },
+    "A-16-036": {
+     "issued": "2016-10-24",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2022-05-26"
+    },
+    "A-13-025": {
+     "issued": "2013-11-18",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2022-05-26"
+    },
+    "A-13-027": {
+     "issued": "2013-11-18",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2022-05-26"
+    },
+    "A-13-013": {
+     "issued": "2013-07-23",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2022-05-26"
+    },
+    "A-07-018": {
+     "issued": "2007-03-26",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2022-05-26"
+    },
+    "A-07-019": {
+     "issued": "2007-03-26",
+     "issued_from": "report",
+     "via": "Report Reclassification",
+     "letter_date": "2022-05-26"
+    }
+   }
+  },
+  {
+   "ntsb_num": "DCA20MA059",
+   "event_date": "2020-01-26",
+   "city": "Calabasas",
+   "fatal": 9,
+   "report": "AAR2101",
+   "lat": 34.110691,
+   "lon": -118.67092,
+   "warnings": {
+    "A-16-034": {
+     "issued": "2016-10-24",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2021-02-25"
+    },
+    "A-16-035": {
+     "issued": "2016-10-24",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2021-02-25"
+    },
+    "A-16-036": {
+     "issued": "2016-10-24",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2021-02-25"
+    },
+    "A-13-013": {
+     "issued": "2013-07-23",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2021-02-25"
+    }
+   }
+  },
+  {
+   "ntsb_num": "DCA23LA125",
+   "event_date": "2023-01-14",
+   "city": "Queens",
+   "fatal": 0,
+   "report": "AIR2401",
+   "lat": 40.6413,
+   "lon": -73.7781,
+   "warnings": {
+    "A-18-031": {
+     "issued": "2018-10-10",
+     "issued_from": "letter",
+     "via": "Report Reclassification",
+     "letter_date": "2024-06-11"
+    },
+    "A-18-030": {
+     "issued": "2018-10-10",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2024-06-11"
+    },
+    "A-00-066": {
+     "issued": "2000-09-06",
+     "issued_from": "letter",
+     "via": "Report Reclassification",
+     "letter_date": "2024-06-11"
+    }
+   }
+  },
+  {
+   "ntsb_num": "DCA23FA149",
+   "event_date": "2023-02-04",
+   "city": "Austin",
+   "fatal": 0,
+   "report": "AIR2402",
+   "lat": 30.1975,
+   "lon": -97.6664,
+   "warnings": {
+    "A-18-030": {
+     "issued": "2018-10-10",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2024-06-18"
+    },
+    "A-21-009": {
+     "issued": "2021-04-13",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2024-08-27"
+    }
+   }
+  },
+  {
+   "ntsb_num": "DCA24MA063",
+   "event_date": "2024-01-06",
+   "city": "Portland",
+   "fatal": 0,
+   "report": "AIR2504",
+   "lat": 45.454167,
+   "lon": -122.75555,
+   "warnings": {
+    "A-18-030": {
+     "issued": "2018-10-10",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2025-07-10"
+    },
+    "A-21-045": {
+     "issued": "2021-09-07",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2025-07-10"
+    },
+    "A-21-040": {
+     "issued": "2021-09-07",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2025-07-10"
+    },
+    "A-21-041": {
+     "issued": "2021-09-07",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2025-07-10"
+    }
+   }
+  },
+  {
+   "ntsb_num": "ANC25MA018",
+   "event_date": "2025-02-06",
+   "city": "Nome",
+   "fatal": 10,
+   "report": "AIR2605",
+   "lat": 64.351667,
+   "lon": -164.28083,
+   "warnings": {
+    "A-16-034": {
+     "issued": "2016-10-24",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2026-07-30"
+    },
+    "A-16-035": {
+     "issued": "2016-10-24",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2026-07-30"
+    },
+    "A-13-013": {
+     "issued": "2013-07-23",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2026-07-30"
+    },
+    "A-13-012": {
+     "issued": "2013-07-23",
+     "issued_from": "report",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2026-07-30"
+    },
+    "A-22-022": {
+     "issued": "2022-06-02",
+     "issued_from": "letter",
+     "via": "Report Reclassification",
+     "letter_date": "2026-07-30"
+    },
+    "A-22-021": {
+     "issued": "2022-06-02",
+     "issued_from": "letter",
+     "via": "Report Reclassification",
+     "letter_date": "2026-07-30"
+    },
+    "A-24-018": {
+     "issued": "2024-08-09",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2026-07-30"
+    },
+    "A-24-017": {
+     "issued": "2024-08-09",
+     "issued_from": "letter",
+     "via": "Recommendation Reiteration",
+     "letter_date": "2026-07-30"
+    }
+   }
+  }
+ ]
+}

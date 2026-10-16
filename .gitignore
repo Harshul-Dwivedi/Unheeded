@@ -20,9 +20,6 @@ docs/screens.md
 docs/design-system.md
 docs/design/
 
-# large CAROL exports; add in a later commit
-data/raw/
-
 # OS / editor
 .DS_Store
 *.swp
