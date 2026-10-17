@@ -11,6 +11,7 @@ Run: uv run python -m unheeded.agents "Was the Nome crash warned about?" [--work
 import argparse
 import asyncio
 import json
+import logging
 import os
 import re
 import sys
@@ -32,6 +33,14 @@ from unheeded import memory as M
 from unheeded import queries as Q
 from unheeded.config import llm
 from unheeded.tools import GENERIC_PLACE
+
+log = logging.getLogger("unheeded")
+if not log.handlers:
+    _h = logging.StreamHandler(sys.stderr)
+    _h.setFormatter(logging.Formatter("%(levelname)s:     %(message)s"))  # same padding as uvicorn access lines
+    log.addHandler(_h)
+log.setLevel(logging.INFO)
+log.propagate = False
 
 BACKEND = Path(__file__).resolve().parents[1]
 # paused runs live here until a person decides; on disk, so a restart does not lose a pending approval
@@ -128,6 +137,31 @@ def citations(text):
     return sorted(set().union(*(ids_in(c) for c in re.findall(r"\[([^\]]{1,40})\]", text))))
 
 
+def _tokens(msg):
+    """input/output/total from LangChain usage_metadata, or OpenRouter/OpenAI response_metadata."""
+    u = getattr(msg, "usage_metadata", None) or {}
+    if not u:
+        meta = getattr(msg, "response_metadata", None) or {}
+        u = meta.get("token_usage") or meta.get("usage") or {}
+    inn = u.get("input_tokens", u.get("prompt_tokens"))
+    out = u.get("output_tokens", u.get("completion_tokens"))
+    return inn, out, u.get("total_tokens")
+
+
+def _arg_hint(args):
+    if not isinstance(args, dict):
+        return ""
+    bits = []
+    for k in ("ntsb_num", "srid", "acronym", "text", "ids", "query"):
+        if args.get(k) in (None, "", [], {}):
+            continue
+        v = args[k]
+        if k == "query":
+            v = " ".join(str(v).split())[:80]
+        bits.append(f"{k}={v}")
+    return " ".join(bits)
+
+
 def _parse(out):
     """MCP tool output (str / content blocks / (content, artifact)) -> dict."""
     if isinstance(out, tuple):
@@ -180,11 +214,34 @@ class Agents:
             return {**args, "graphName": "ntsb"}  # agents only read the library graph, never a workspace
         return args
 
+    async def ask(self, role, messages, model=None):
+        """One LLM round-trip. Logs before the call (so the server is not silent) then duration, tokens, tool names."""
+        m = model or self.model
+        log.info("llm %s calling …", role)
+        t = time.perf_counter()
+        try:
+            reply = await m.ainvoke(messages)
+        except Exception as e:
+            log.info("llm %s failed after %.0fms  %s", role, (time.perf_counter() - t) * 1000, e)
+            raise
+        ms = (time.perf_counter() - t) * 1000
+        inn, out, total = _tokens(reply)
+        tools = [tc["name"] for tc in (getattr(reply, "tool_calls", None) or [])]
+        parts = [f"llm {role} done  {ms:.0f}ms"]
+        if inn is not None or out is not None:
+            parts.append(f"tokens in={inn} out={out}" + (f" total={total}" if total is not None else ""))
+        if tools:
+            parts.append("tools " + ",".join(tools))
+        log.info("  ".join(parts))
+        return reply
+
     async def call(self, inv, agent, name, args):
         """Every tool call goes through here: allowlist, isolation overrides, Step log, Cypher stripped for the LLM."""
         if name not in self.tools:
             return {"error": f"tool {name} not available"}
         args = self.effective(name, args)
+        hint = _arg_hint(args)
+        log.info("tool %s %s calling …%s", agent, name, f"  {hint}" if hint else "")
         t = time.perf_counter()
         result = _parse(await self.tools[name].ainvoke(args))
         wall = round((time.perf_counter() - t) * 1000, 2)
@@ -194,6 +251,7 @@ class Agents:
         n = M.log_step(self.mem, inv, agent, name, cypher="\n;\n".join(queries) if queries else None,
                        result_count=_count(result), ms=result.get("ms", wall) if isinstance(result, dict) else wall,
                        args=args)
+        log.info("tool %s %s done  %.0fms  %s", agent, name, wall, _summary(name, result) or "ok")
         if self.on_step:
             self.on_step({"n": n, "agent": agent, "tool": name, "args": args, "ms": result.get("ms") if isinstance(result, dict) else None,
                           "wall_ms": wall, "cypher": queries, "summary": _summary(name, result)})
@@ -202,13 +260,16 @@ class Agents:
     # --- nodes --------------------------------------------------------------------------------------------------------
 
     async def orchestrator(self, s: State):
+        log.info("agent orchestrator  %s", (s.get("question") or "")[:120])
         past = M.history(self.mem, s["question"], limit=3)  # before creating this one, so it doesn't find itself
         inv = M.start_investigation(self.mem, s["question"])
-        reply = await self.model.ainvoke([SystemMessage(PLANNER), HumanMessage(s["question"])])
+        reply = await self.ask("planner", [SystemMessage(PLANNER), HumanMessage(s["question"])])
         try:
             plan, basis = Plan.model_validate_json(_json_text(reply.content)), "llm"
         except (ValidationError, ValueError):
             plan, basis = plan_from_text(s["question"]), "fallback"  # deterministic, logged
+        log.info("plan %s (%s)%s", plan.intent, basis,
+                 "".join(f" {k}={v}" for k, v in plan.model_dump().items() if k != "intent" and v is not None))
         n = M.log_step(self.mem, inv, "orchestrator", "plan", args={"plan": plan.model_dump(), "basis": basis})
         if self.on_step:
             self.on_step({"n": n, "agent": "orchestrator", "tool": "plan", "args": {"basis": basis}, "ms": None, "cypher": None,
@@ -219,6 +280,7 @@ class Agents:
         return {"investigation": inv, "status": "running", "facts": {"plan": plan.model_dump(), "related_history": past}}
 
     async def scout(self, s: State):
+        log.info("agent scout")
         inv = s["investigation"]
         task = M.claim_task(self.mem, "scout", kind="resolve", inv_id=inv)
         p = Plan(**task["payload"])
@@ -249,6 +311,7 @@ class Agents:
         return {"facts": facts}
 
     async def analyst(self, s: State):
+        log.info("agent analyst")
         inv = s["investigation"]
         task = M.claim_task(self.mem, "analyst", kind="analyse", inv_id=inv)
         p, facts = Plan(**task["payload"]["plan"]), {}
@@ -273,7 +336,7 @@ class Agents:
         msgs = [SystemMessage(ANALYST), HumanMessage(json.dumps(context, default=str))]
         calls, used = [], 0
         while used < ANALYST_BUDGET:
-            ai = await model.ainvoke(msgs)
+            ai = await self.ask(f"analyst turn {used + 1}/{ANALYST_BUDGET}", msgs, model)
             msgs.append(ai)
             if not ai.tool_calls:
                 break
@@ -295,6 +358,7 @@ class Agents:
         return {"facts": {**facts, "calls": calls, "analyst_note": _text(msgs[-1]) if isinstance(msgs[-1], AIMessage) else ""}}
 
     async def clerk(self, s: State):
+        log.info("agent clerk")
         inv = s["investigation"]
         task = M.claim_task(self.mem, "clerk", kind="draft_brief", inv_id=inv)
         facts = s["facts"]
@@ -314,7 +378,7 @@ class Agents:
             if note is not None and task.get("payload", {}).get("previous"):  # a redraft after "send back"
                 msgs.append(HumanMessage(f"The reviewer sent your previous draft back with this note: {note!r}. "
                                          f"Previous draft:\n{s['brief']['text']}\nWrite the corrected brief."))
-            text = _text(await self.model.ainvoke(msgs))
+            text = _text(await self.ask("clerk", msgs))
         cites = citations(text)
         brief_id = M.save_brief(self.mem, inv, text, cites)
         if task:
@@ -330,13 +394,19 @@ class Agents:
         subject = (s["facts"].get("accident") or {}).get("ntsb_num") if s.get("status") != "not_found" else None
         subject = subject or (s["facts"].get("plan") or {}).get("srid")
         t = time.perf_counter()
+        log.info("gate checking brief …")
         v = G.check(b["text"], subject, require_claims=s.get("status") not in ("not_understood", "not_found"))
+        wall = round((time.perf_counter() - t) * 1000, 2)
         status = "awaiting_approval" if v["passed"] else "blocked"
         M.update_brief(self.mem, b["id"], status, verdict=v, thread=config["configurable"]["thread_id"])
         queries = v.pop("queries", [])
         n = M.log_step(self.mem, s["investigation"], "gate", "check", result_count=len(v["blocked"]), cypher="\n;\n".join(queries),
-                       ms=round((time.perf_counter() - t) * 1000, 2),
+                       ms=wall,
                        args={"passed": v["passed"], "claims_checked": v["claims_checked"], "blocked": v["blocked"][:10]})
+        blocked = v.get("blocked") or []
+        log.info("gate %s  %.0fms  %s claims checked%s",
+                 "passed" if v["passed"] else "blocked", wall, v["claims_checked"],
+                 "" if v["passed"] else "  " + "; ".join(f"{x.get('check')}: {x.get('reason')}" for x in blocked[:5]))
         if self.on_step:
             self.on_step({"n": n, "agent": "gate", "tool": "check", "args": {"passed": v["passed"]}, "ms": None, "cypher": queries,
                           "summary": f"{v['claims_checked']} claims checked · " + ("passed" if v["passed"] else f"{len(v['blocked'])} blocked")})
@@ -350,6 +420,7 @@ class Agents:
                        "blocked": b["verdict"]["blocked"], "warnings": b["verdict"]["warnings"],
                        "allowed": (["approve"] if b["status"] == "awaiting_approval" else []) + ["edit", "send_back", "reject"]})
         action, reviewer = d.get("action"), d.get("reviewer") or "reviewer"
+        log.info("gate action %s by %s", action, reviewer)
         if action == "send_back":  # the Clerk redrafts with the reviewer's note; the old draft stays, marked sent_back
             M.update_brief(self.mem, b["id"], "sent_back")
             M.create_task(self.mem, s["investigation"], "draft_brief", {"note": d.get("note") or "", "previous": b["id"]})
@@ -465,7 +536,7 @@ async def load_tools(stack, client):
         except Exception as e:  # the sponsor server is optional; ours is not
             if server == "unheeded":
                 raise
-            print(f"[agents] {server} MCP server unavailable, continuing without it: {e}", file=sys.stderr)
+            log.warning("%s MCP server unavailable, continuing without it: %s", server, e)
             continue
         for t in await load_mcp_tools(session):
             if server == "unheeded" or t.name in ("query_graph_readonly", "get_graph_schema"):  # sponsor: read tools only

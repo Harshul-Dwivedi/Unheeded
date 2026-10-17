@@ -96,10 +96,13 @@ async def start_run(ask: Ask):
     run = RUNS[thread] = Run(thread, ask.workspace, ask.question)
 
     async def work():
+        A.log.info("run %s start  ws=%s  %s", thread, ask.workspace, ask.question[:120])
         try:
             state = await A.run(ask.question, ask.workspace, on_step=lambda e: run.push("step", e), thread_id=thread)
             run.push("result", summary(state))
+            A.log.info("run %s %s  brief %s", thread, state.get("status"), (state.get("brief") or {}).get("status"))
         except Exception as e:  # surfaced to the client, never swallowed
+            A.log.info("run %s error  %s", thread, e)
             run.push("error", {"message": str(e)[:500]})
         finally:
             run.done = True
@@ -143,7 +146,9 @@ async def decide(ws: str, thread: str, d: Decision):
         raise HTTPException(400, "edit needs text")
     if not await A.pending(thread):  # checkpoints are on disk: this works after an API restart too
         raise HTTPException(404, "no paused run with that id")
+    A.log.info("run %s resume  %s by %s", thread, d.action, d.reviewer)
     state = await A.resume(thread, d.model_dump(exclude_none=True))
+    A.log.info("run %s %s  brief %s", thread, state.get("status"), (state.get("brief") or {}).get("status"))
     return summary(state)
 
 
