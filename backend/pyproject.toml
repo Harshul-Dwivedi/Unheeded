@@ -1,0 +1,23 @@
+[project]
+name = "unheeded"
+version = "0.1.0"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+  "falkordb==1.7.1",
+  "fastembed==0.8.1",
+  "mcp==1.30.0",  # 1.x: langchain-mcp-adapters 0.3.x requires mcp<2
+  "langgraph==1.2.12",
+  "langchain-core==1.6.5",
+  "langchain-openai==1.6.6",  # OpenRouter (OpenAI-compatible endpoint)
+  "langchain-mcp-adapters==0.3.2",
+  "langgraph-checkpoint-sqlite==3.1.1",  # paused approvals survive restarts
+  "fastapi==0.141.1",
+  "uvicorn==0.54.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
