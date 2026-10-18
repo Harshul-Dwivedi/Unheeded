@@ -68,7 +68,7 @@ export default async function Method() {
               <Li mark="✓">Choose extra evidence to fetch, within a fixed tool list and budget, and write the brief’s wording.</Li>
               <Li mark="✓">Propose connections the NTSB did not make, clearly marked as unverified.</Li>
               <Li mark="✕">State a date, status or id that a graph query did not return. An approval gate (plain code, not a model) checks every claim against the graph.</Li>
-              <Li mark="✕">Publish anything without a person’s approval, or cite an unverified proposal in a brief.</Li>
+              <Li mark="✕">Publish anything without a person’s approval, or present an unverified proposal as a finding: proposals appear only under a labelled "Unverified" heading.</Li>
               <Li mark="✕" last>Name or describe individuals. Names in quoted official letters are removed before display.</Li>
             </div>
           </section>

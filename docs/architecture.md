@@ -74,5 +74,5 @@ next find_candidates loads the rules first → fewer candidates checked, higher 
   alerts workspaces watching the affected recommendation/organisation/accident.
 
 ## Guardrails (also in the method page)
-Read-only agents; timeouts; LIMIT caps; write-keyword block on ad-hoc Cypher; nothing published without approval;
-unverified proposals never enter briefs; no individuals named; official vs proposed facts stored in separate graphs.
+Read-only agents; timeouts; LIMIT caps; nothing published without approval;
+unverified proposals appear only under a labelled "Unverified" heading and never count toward the answer; no individuals named; official vs proposed facts stored in separate graphs.

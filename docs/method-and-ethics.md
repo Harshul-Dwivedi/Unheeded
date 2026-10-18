@@ -11,12 +11,13 @@
 - Every number carries a source (record id, field, or query) reachable from the UI ("How we know these numbers").
 
 ## Official vs proposed
-Solid = NTSB record (graph `ntsb`). Dashed = agent proposal, unverified (workspace graph). Proposals never appear
-in answers or briefs until a person confirms them, and even then they are labelled as confirmed by a reviewer, not by the NTSB.
+Solid = NTSB record (graph `ntsb`). Dashed = agent proposal, unverified (workspace graph). Proposals never count
+towards an answer: they appear only under a labelled "Unverified proposals" heading, and a 
+confirmed one is labelled as confirmed by a reviewer, not by the NTSB.
 
 ## What the agents may do
 ✓ read-only graph queries with time and row limits · ✓ propose connections, marked unverified
-✕ publish without human approval · ✕ cite an unverified proposal · ✕ name individuals · ✕ search the web
+✕ publish without human approval · ✕ present an unverified proposal as a finding· ✕ name individuals · ✕ search the web
 
 ## Known limits (publish these)
 - Issue dates (revised rule, docs/data.md): earliest of origin report/Board date, first letter, DateClosed, 31 Dec of the ID year.
