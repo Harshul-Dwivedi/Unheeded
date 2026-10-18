@@ -1,6 +1,6 @@
 # ✈️ Unheeded
 
-**For any US aviation crash: had the NTSB (National Transport Security Board) already warned about the underlying safety hazard, and was that warning still open on the day it happened?**
+**For any US aviation crash: had the NTSB already warned about the underlying safety hazard, and was that warning still open on the day it happened?**
 
 Unheeded answers from public National Transportation Safety Board (NTSB) investigation records. It uncovers recurring aviation hazards by traversing a multi-tier knowledge graph in **FalkorDB**, coordinates autonomous **LangGraph** agents with sub-millisecond graph queries, and enforces a deterministic, plain-code approval gate so that **nothing is published without human sign-off**.
 
@@ -33,23 +33,18 @@ Unheeded separates facts from reasoning using a strict hierarchy: **The graph ho
 * **Deterministic Fact-Checking Gate:** Every brief draft passes through a strict Python verification parser before reaching a human reviewer.
 * **Database-Enforced Security:** Read-only access is enforced by FalkorDB ACLs (`agent_ro` user permits only `GRAPH.RO_QUERY`), eliminating prompt-injection risks at the database layer.
 
-```
-FalkorDB Graph (Redis-backed multi-graph engine)
-   ▲  +GRAPH.RO_QUERY (read-only Cypher)
-   │
-queries.py (Parameterized Cypher templates & date logic)
-   ▲  Pure Python functions with timing & LIMIT caps
-   │
-tools.py (11 read-only graph query tools)
-   ▲  FastMCP protocol (stdio / HTTP)
-   │
-mcp_server.py (Unheeded MCP Server + FalkorDB MCP Server)
-   ▲  Tool calls & live schema discovery
-   │
-agents.py (LangGraph orchestration & plain-code approval gate)
-   ▲  REST endpoints & Server-Sent Events (SSE /events)
-   │
-Next.js Web UI (Investigate search, live Cypher logs & Review queue)
+```mermaid
+flowchart BT
+    UI["<b>Next.js Web UI</b> (Port 3001)<br/>Investigate Search, Live Cypher Logs, Review Queue"]
+    AG["<b>LangGraph Agents</b> (agents.py)<br/>Orchestration & Plain-Code Approval Gate"]
+    MCP["<b>MCP Tool Servers</b> (mcp_server.py)<br/>FastMCP Server + FalkorDB MCP Server (:8080)"]
+    TL["<b>Graph Tool Layer</b> (tools.py & queries.py)<br/>11 Read-Only Tools with Timing & Row Caps"]
+    DB[("<b>FalkorDB Multi-Graph Engine</b> (:6379)<br/>ntsb (Official, Read-Only) & ws_* (Memory)")]
+
+    UI -->|"REST & SSE /events"| AG
+    AG -->|"Tool Calls & Schema Discovery"| MCP
+    MCP -->|"Python Wrappers"| TL
+    TL -->|"GRAPH.RO_QUERY (agent_ro)"| DB
 ```
 
 
@@ -86,12 +81,16 @@ Across the public NTSB CAROL database (1967–2026), this strict standard identi
 
 A relational database or standalone vector store cannot effectively power this system. FalkorDB delivers:
 
-```
-                               ┌───[:ISSUED_FROM]───► (:Accident {ntsb_num: 'ANC25MA018'})
-                               │                                ▲
-(:Recommendation {srid: 'A-16-035'})                            │
-                               │                                │ [:ABOUT]
-                               └───[:REITERATED_IN]──► (:Report {num: 'AIR-26-05'})
+```mermaid
+graph LR
+    Origin["Earlier Crash (2016)<br/><i>Origin Investigation</i>"]
+    Rec["Recommendation<br/><b>A-16-035</b><br/><i>Flight Data Monitoring</i>"]
+    Report["Report<br/><b>AIR-26-05</b>"]
+    Crash["Nome Crash (2025)<br/><b>ANC25MA018</b>"]
+
+    Rec -->|:ISSUED_FROM| Origin
+    Rec ==>|:REITERATED_IN| Report
+    Report ==>|:ABOUT| Crash
 ```
 
 1. **Multi-Hop Traversal with Temporal Logic:**  
@@ -199,12 +198,12 @@ flowchart TD
     Start([User Question]) --> Orch[Orchestrator]
     Orch -->|Parse Intent| Scout[Scout Agent]
     Scout -->|Resolve Accident / Rec| Analyst[Analyst Agent]
-    Analyst -->|11 MCP Tools + FalkorDB MCP| Clerk[Clerk Agent]
-    Clerk -->|Draft Cited Brief| Gate{Approval Gate\nPlain Code}
-    Gate -->|Violations Found| Blocked[Draft Blocked\nAction Required]
-    Gate -->|All Claims Verified| Interrupt[LangGraph Interrupt\nHuman Approval]
-    Interrupt -->|Human Approves| Approved([Published Brief])
-    Interrupt -->|Send Back| Clerk
+    Analyst -->|"11 MCP Tools + FalkorDB MCP"| Clerk[Clerk Agent]
+    Clerk -->|"Draft Cited Brief"| Gate{"Approval Gate<br/>Plain Code"}
+    Gate -->|"Violations Found"| Blocked["Draft Blocked<br/>Action Required"]
+    Gate -->|"All Claims Verified"| Interrupt["LangGraph Interrupt<br/>Human Approval"]
+    Interrupt -->|"Human Approves"| Approved([Published Brief])
+    Interrupt -->|"Send Back"| Clerk
 ```
 
 ### Agent Roles & Plain-Code Guarantees
