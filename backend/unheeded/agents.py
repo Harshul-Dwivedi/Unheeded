@@ -76,7 +76,9 @@ CLERK = ("ROLE: clerk. Write a short brief answering the question from the facts
          "report, crash and letter id in square brackets, e.g. [A-16-035] [AIR-26-05] [ANC25MA018]. Structure: one-line "
          "answer; the linked warnings with their status on the crash date; anything unverified, clearly labelled "
          "'Unverified proposals (not NTSB findings)'; one closing line: 'A linked warning does not establish that acting on "
-         "it would have prevented the crash.' If there is no linked warning, say whether the crash has an NTSB report in the "
+         "it would have prevented the crash.' Every item in open_warnings is a linked warning, including ones whose "
+         "current_status is now closed (they were open on the crash date); give their number as linked_count. "
+         "If there is no linked warning, say whether the crash has an NTSB report in the "
          "data (absence.reports): with no report there was nothing to search, so say that plainly; name any repeats in its "
          "report that fall outside the definition (absence.repeated_outside_definition) and that they are not linked "
          "warnings. Plain text, no markdown tables. " + RULES)
@@ -186,8 +188,12 @@ def _shrink(x, depth=0):
 
 
 def _brief_facts(facts):
-    """What the Clerk sees: tool results only (plus the question's plan), size-capped."""
-    return json.dumps(_shrink({k: v for k, v in facts.items() if k != "related_history"}), default=str)
+    """What the Clerk sees: tool results only (plus the question's plan), size-capped. The count is computed here, not
+    left to the model: a real model dropped the warnings that are closed today and wrote 6 for Nome's 8."""
+    f = {k: v for k, v in facts.items() if k != "related_history"}
+    if "open_warnings" in f:
+        f["linked_count"] = len(f["open_warnings"])
+    return json.dumps(_shrink(f), default=str)
 
 
 class State(TypedDict, total=False):

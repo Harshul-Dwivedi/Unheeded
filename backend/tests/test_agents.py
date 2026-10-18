@@ -57,6 +57,15 @@ def test_nome_end_to_end(ws):
     assert g.ro_query("MATCH (b:Brief {status: 'approved'})-[:APPROVED_BY]->(a:Approval {by: 'tester'}) RETURN count(b)").result_set == [[1]]
 
 
+def test_clerk_gets_the_count():
+    # a real model wrote "6 linked warnings" for Nome, dropping the two closed today; the count is given, not inferred
+    ws = [{"srid": s, "current_status": "Closed - Acceptable (Closure Date)" if s.startswith("A-22") else "Open"} for s in NOME_LINKED]
+    ws = {"plan": {}, "open_warnings": ws}
+    assert json.loads(A._brief_facts(ws))["linked_count"] == 8
+    assert "linked_count" not in json.loads(A._brief_facts({"plan": {}}))
+    assert "linked_count" in A.CLERK and "now closed" in A.CLERK
+
+
 def test_generic_place_words_do_not_pick_a_crash(ws):
     s = run("Was the Bering Air crash near Nome warned about?", ws)  # "Air" also matches "Hida Air Park"
     assert s["facts"]["accident"]["ntsb_num"] == "ANC25MA018"
